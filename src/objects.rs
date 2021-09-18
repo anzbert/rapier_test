@@ -2,11 +2,11 @@ use rapier2d::na::Vector2;
 
 use crate::*;
 
+#[derive(Debug)]
 pub struct Player {
     pub pos: Vector2<f32>,
     pub vel: Vector2<f32>,
     pub size: Vector2<f32>,
-    pub coll_handle: Option<ColliderHandle>,
 }
 
 impl Player {
@@ -22,9 +22,12 @@ impl Player {
             pos,
             vel: vector![0.0, 0.0],
             size,
-            coll_handle: None,
         }
     }
+
+    // pub fn set_handle(&mut self, rb_handle: RigidBodyHandle) {
+    //     self.handle = rb_handle;
+    // }
 
     pub fn draw(&self, handle_position: &Vector<Real>) {
         let corner_x = &handle_position[0] - self.size[0] / 2.0;

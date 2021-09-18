@@ -20,17 +20,21 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
-    let sw = screen_width();
-    let sh = screen_height();
+    // let sw = screen_width();
+    // let sh = screen_height();
 
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
 
     let player = Player::new(vector![300.0, 300.0]);
 
+    let mut graphics: Vec<(Player, RigidBodyHandle)> = Vec::new();
+
     let player_handle = rigid_body_set.insert(player.body());
-    let player_coll =
+    let _player_collider_handle =
         collider_set.insert_with_parent(player.collider(), player_handle, &mut rigid_body_set);
+
+    graphics.push((player, player_handle));
 
     /* Create other structures necessary for the simulation. */
     let gravity = vector![0.0, 9.81];
@@ -65,11 +69,17 @@ async fn main() {
             &event_handler,
         );
 
+        for (p, h) in graphics.iter() {
+            p.draw(&rigid_body_set[*h].translation());
+        }
+
         // player.draw(&rigid_body_set[player_handle].translation());
 
-        let player_body = &rigid_body_set[player_handle];
+        // let player_body = &rigid_body_set[player_handle];
         // player_body.draw();
-        println!("Ball altitude: {:?}", player_coll);
+        // println!("Ball altitude: {:?}", rigid_body_set);
+
+        // player.set_handle(&rigid_body_set[player_handle]);
 
         // draw_circle(
         //     ball_body.translation().x * 50.0,
