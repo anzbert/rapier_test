@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 rapier2d = { version = "*", features = [ "simd-stable" ] }
+macroquad = "0.*"
