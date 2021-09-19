@@ -111,6 +111,13 @@ async fn main() {
             rigid_body.apply_torque_impulse(2500.0, true);
         }
 
+        // enable quitting with CMD+Q on macos
+        if let "macos" = std::env::consts::OS {
+            if is_key_down(KeyCode::LeftSuper) && is_key_down(KeyCode::Q) {
+                return;
+            }
+        }
+
         physics_pipeline.step(
             &gravity,
             &integration_parameters,
