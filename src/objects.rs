@@ -79,14 +79,15 @@ impl Solid {
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
     ) -> Solid {
+        let half_space = vector![pos.x + size.x / 2.0, pos.y + size.y / 2.0];
         let body = RigidBodyBuilder::new_static()
-            .translation(pos)
+            .translation(half_space)
             .rotation(0.0)
             .lock_translations()
             .build();
         let solid_handle = body_set.insert(body);
 
-        let collider = ColliderBuilder::cuboid(size.x, size.y).build();
+        let collider = ColliderBuilder::cuboid(size.x, size.y + size.y / 2.0).build();
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {
@@ -98,8 +99,8 @@ impl Solid {
     }
     pub fn draw(&self, body_set: &RigidBodySet) {
         let handle_position = body_set[self.body_handle].translation();
-        let corner_x = handle_position.x;
-        let corner_y = handle_position.y;
+        let corner_x = handle_position.x - self.size.x / 2.0;
+        let corner_y = handle_position.y - self.size.y / 2.0;
         draw_rectangle(corner_x, corner_y, self.size.x, self.size.y, GREEN);
     }
 }
