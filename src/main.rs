@@ -39,8 +39,8 @@ async fn main() {
     players.push(&player1);
 
     let floor = Solid::new(
-        vector![0.0, screen_height() - 50.0],
-        vector![screen_width(), 50.0],
+        vector![0.0, screen_height() - 20.0],
+        vector![screen_width(), 20.0],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -74,7 +74,7 @@ async fn main() {
     /* Create other structures necessary for the simulation. */
     let gravity = vector![0.0, 9.81];
     let integration_parameters = IntegrationParameters {
-        dt: 1.0 / 20.0, // in 1 / fps?
+        dt: 1.0 / 15.0, // in 1 / fps?
         ..Default::default()
     };
     let mut physics_pipeline = PhysicsPipeline::new();
@@ -104,11 +104,11 @@ async fn main() {
         }
         if is_key_down(KeyCode::Q) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(-2500.0, true);
+            rigid_body.apply_torque_impulse(-10000.0, true);
         }
         if is_key_down(KeyCode::E) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(2500.0, true);
+            rigid_body.apply_torque_impulse(10000.0, true);
         }
 
         // enable quitting with CMD+Q on macos

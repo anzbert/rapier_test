@@ -3,6 +3,15 @@ use std::f32::consts::SQRT_2;
 use crate::nalgebra::Vector2;
 use crate::*;
 
+fn corner_to_center(corner: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
+    let x = corner.x + (size.x / 2.0);
+    let y = corner.y + (size.y / 2.0);
+    vector![x, y]
+}
+// fn center_to_corner(center: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
+//     corner + (size / 2.0)
+// }
+
 #[derive(Debug)]
 pub struct Player {
     pub pos: Vector2<f32>,
@@ -22,7 +31,7 @@ impl Player {
         let size = vector![50.0, 50.0];
 
         let body = RigidBodyBuilder::new_dynamic()
-            .translation(pos)
+            .translation(corner_to_center(pos, size))
             .rotation(0.0)
             .build();
         let player_handle = body_set.insert(body);
@@ -46,19 +55,21 @@ impl Player {
 
     pub fn draw(&self, body_set: &RigidBodySet) {
         let translation = body_set[self.body_handle].translation();
+
         let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
-        let center_x = translation.x + self.size.x;
-        let center_y = translation.y + self.size.y;
-        // draw_rectangle(corner_x, corner_y, self.size.x, self.size.y, RED);
+        let radius = self.size.x / 2.0 * SQRT_2;
+
         draw_poly_lines(
-            center_x,
-            center_y,
+            translation.x,
+            translation.y,
             4,
-            self.size.x / 2.0 * SQRT_2,
+            radius,
             rotation + 45.0,
-            2.0,
+            5.0,
             RED,
         );
+
+        draw_circle(translation.x, translation.y, 5.0, BLUE);
     }
 
     // pub fn apply_vel (&self)
@@ -79,15 +90,15 @@ impl Solid {
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
     ) -> Solid {
-        let half_space = vector![pos.x + size.x / 2.0, pos.y + size.y / 2.0];
+        // let half_space = vector![pos.x + size.x / 2.0, pos.y + size.y / 2.0];
+
         let body = RigidBodyBuilder::new_static()
-            .translation(half_space)
+            .translation(corner_to_center(pos, size))
             .rotation(0.0)
-            .lock_translations()
             .build();
         let solid_handle = body_set.insert(body);
 
-        let collider = ColliderBuilder::cuboid(size.x, size.y + size.y / 2.0).build();
+        let collider = ColliderBuilder::cuboid(size.x / 2.0, size.y / 2.0).build();
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {
@@ -98,9 +109,12 @@ impl Solid {
         }
     }
     pub fn draw(&self, body_set: &RigidBodySet) {
-        let handle_position = body_set[self.body_handle].translation();
-        let corner_x = handle_position.x - self.size.x / 2.0;
-        let corner_y = handle_position.y - self.size.y / 2.0;
+        let translation = body_set[self.body_handle].translation();
+        // let position = body_set[self.body_handle].position();
+        let corner_x = translation.x - self.size.x / 2.0;
+        let corner_y = translation.y - self.size.y / 2.0;
         draw_rectangle(corner_x, corner_y, self.size.x, self.size.y, GREEN);
+
+        draw_circle(translation.x, translation.y, 5.0, BLUE);
     }
 }
