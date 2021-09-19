@@ -18,13 +18,19 @@ fn window_conf() -> Conf {
     }
 }
 
+pub struct GameObject {
+    collider_handle: ColliderHandle,
+    body_handle: RigidBodyHandle,
+    render: Player,
+}
+
 #[macroquad::main(window_conf)]
 async fn main() {
-    // let sw = screen_width();
-    // let sh = screen_height();
-
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
+
+    // let sw = screen_width();
+    // let sh = screen_height();
 
     let player = Player::new(vector![300.0, 300.0]);
 
