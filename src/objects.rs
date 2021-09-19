@@ -1,4 +1,4 @@
-use std::f32::consts::{PI, SQRT_2};
+use std::f32::consts::SQRT_2;
 
 use crate::nalgebra::Vector2;
 use crate::*;
@@ -75,11 +75,10 @@ pub struct Solid {
 impl Solid {
     pub fn new(
         pos: Vector2<f32>,
+        size: Vector2<f32>,
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
     ) -> Solid {
-        let size = vector![screen_width(), 100.0];
-
         let body = RigidBodyBuilder::new_static()
             .translation(pos)
             .rotation(0.0)
@@ -87,7 +86,7 @@ impl Solid {
             .build();
         let solid_handle = body_set.insert(body);
 
-        let collider = ColliderBuilder::cuboid(size.x, size.y - size.y / 2.0).build();
+        let collider = ColliderBuilder::cuboid(size.x, size.y).build();
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {
