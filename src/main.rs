@@ -18,34 +18,34 @@ fn window_conf() -> Conf {
     }
 }
 
-pub struct GameObject {
-    collider_handle: ColliderHandle,
-    body_handle: RigidBodyHandle,
-    render: Player,
-}
+// pub struct GameObject {
+//     collider_handle: ColliderHandle,
+//     body_handle: RigidBodyHandle,
+//     render: Player,
+// }
 
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
+    let mut players: Vec<&Player> = Vec::new();
+    let mut solids: Vec<Solid> = Vec::new();
 
-    // let sw = screen_width();
-    // let sh = screen_height();
+    let player1 = Player::new(vector![0.0, 0.0], &mut rigid_body_set, &mut collider_set);
+    players.push(&player1);
 
-    let player = Player::new(vector![300.0, 300.0]);
+    let floor = Solid::new(
+        vector![0.0, screen_height() - 100.0],
+        &mut rigid_body_set,
+        &mut collider_set,
+    );
+    solids.push(floor);
 
-    let mut graphics: Vec<(Player, RigidBodyHandle)> = Vec::new();
-
-    let player_handle = rigid_body_set.insert(player.body());
-    let _player_collider_handle =
-        collider_set.insert_with_parent(player.collider(), player_handle, &mut rigid_body_set);
-
-    graphics.push((player, player_handle));
-
+    ///////////////////////////////////////////////////////////
     /* Create other structures necessary for the simulation. */
     let gravity = vector![0.0, 9.81];
     let integration_parameters = IntegrationParameters {
-        dt: 1.0 / 60.0, // in 1 / fps?
+        dt: 1.0 / 20.0, // in 1 / fps?
         ..Default::default()
     };
     let mut physics_pipeline = PhysicsPipeline::new();
@@ -61,6 +61,33 @@ async fn main() {
     loop {
         clear_background(GRAY);
 
+        if is_key_down(KeyCode::Right) {
+            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+            // rigid_body.set_linvel(vector![10.0, 0.0], true);
+            rigid_body.apply_impulse(vector![1000.0, 0.0], true);
+        }
+        if is_key_down(KeyCode::Left) {
+            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+            rigid_body.apply_impulse(vector![-1000.0, 0.0], true);
+        }
+        if is_key_down(KeyCode::Up) {
+            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+            // rigid_body.set_linvel(vector![0.0, -10.0], true);
+            rigid_body.apply_impulse(vector![0.0, -2500.0], true);
+        }
+        // if is_key_down(KeyCode::Down) {}
+
+        if is_key_down(KeyCode::Q) {
+            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+            // rigid_body.set_linvel(vector![0.0, -10.0], true);
+            rigid_body.apply_torque_impulse(-2500.0, true);
+        }
+        if is_key_down(KeyCode::E) {
+            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+            // rigid_body.set_linvel(vector![0.0, -10.0], true);
+            rigid_body.apply_torque_impulse(2500.0, true);
+        }
+
         physics_pipeline.step(
             &gravity,
             &integration_parameters,
@@ -75,24 +102,12 @@ async fn main() {
             &event_handler,
         );
 
-        for (p, h) in graphics.iter() {
-            p.draw(&rigid_body_set[*h].translation());
+        for p in players.iter() {
+            p.draw(&rigid_body_set);
         }
-
-        // player.draw(&rigid_body_set[player_handle].translation());
-
-        // let player_body = &rigid_body_set[player_handle];
-        // player_body.draw();
-        // println!("Ball altitude: {:?}", rigid_body_set);
-
-        // player.set_handle(&rigid_body_set[player_handle]);
-
-        // draw_circle(
-        //     ball_body.translation().x * 50.0,
-        //     ball_body.translation().y * 50.0,
-        //     10.0,
-        //     RED,
-        // );
+        for s in solids.iter() {
+            s.draw(&rigid_body_set);
+        }
 
         next_frame().await
     }
