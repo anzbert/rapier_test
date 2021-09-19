@@ -7,7 +7,7 @@ use objects::*;
 // Macroquad window config:
 fn window_conf() -> Conf {
     Conf {
-        window_title: "carzz".to_owned(),
+        window_title: "boink".to_owned(),
         window_width: 800,
         window_height: 600,
         high_dpi: false,
@@ -33,6 +33,7 @@ async fn main() {
 
     let player1 = Player::new(
         vector![screen_width() / 2.0, screen_height() / 2.0],
+        vector![50.0, 50.0],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -70,13 +71,13 @@ async fn main() {
     );
     solids.push(wall_right);
 
-    ///////////////////////////////////////////////////////////
-    /* Create other structures necessary for the simulation. */
+    //////////////////////////////////////////////////////////
+    /* Create Rapier elements necessary for the simulation. */
     let gravity = vector![0.0, 9.81];
-    let integration_parameters = IntegrationParameters {
-        dt: 1.0 / 15.0, // in 1 / fps?
-        ..Default::default()
-    };
+    // let integration_parameters = IntegrationParameters {
+    //     dt: get_frame_time() * 4.0, // maybe needs to be in the game loop ?
+    //     ..Default::default()
+    // };
     let mut physics_pipeline = PhysicsPipeline::new();
     let mut island_manager = IslandManager::new();
     let mut broad_phase = BroadPhase::new();
@@ -86,10 +87,19 @@ async fn main() {
     let physics_hooks = ();
     let event_handler = ();
 
+    // GAME LOOP:
     /* Run the game loop, stepping the simulation once per frame. */
     loop {
         clear_background(GRAY);
 
+        // enable quitting with CMD+Q on macos:
+        if let "macos" = std::env::consts::OS {
+            if is_key_down(KeyCode::LeftSuper) && is_key_down(KeyCode::Q) {
+                return; // return from main -> quit
+            }
+        }
+
+        // UPDATE CONTROLS:
         if is_key_down(KeyCode::Right) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
             rigid_body.apply_impulse(vector![1000.0, 0.0], true);
@@ -111,12 +121,11 @@ async fn main() {
             rigid_body.apply_torque_impulse(10000.0, true);
         }
 
-        // enable quitting with CMD+Q on macos
-        if let "macos" = std::env::consts::OS {
-            if is_key_down(KeyCode::LeftSuper) && is_key_down(KeyCode::Q) {
-                return;
-            }
-        }
+        // UPDATE PHYSICS:
+        let integration_parameters = IntegrationParameters {
+            dt: get_frame_time() * 4.0, // maybe needs to be in the game loop ?
+            ..Default::default()
+        };
 
         physics_pipeline.step(
             &gravity,
@@ -132,6 +141,7 @@ async fn main() {
             &event_handler,
         );
 
+        // UPDATE GRAPHICS:
         for p in players.iter() {
             p.draw(&rigid_body_set);
         }

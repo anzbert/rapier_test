@@ -25,10 +25,11 @@ pub struct Player {
 impl Player {
     pub fn new(
         pos: Vector2<f32>,
+        size: Vector2<f32>,
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
     ) -> Player {
-        let size = vector![50.0, 50.0];
+        let size = size;
 
         let body = RigidBodyBuilder::new_dynamic()
             .translation(corner_to_center(pos, size))
