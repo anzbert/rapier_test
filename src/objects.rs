@@ -1,4 +1,4 @@
-use std::f32::consts::SQRT_2;
+use std::f32::consts::{PI, SQRT_2};
 
 use crate::nalgebra::Vector2;
 use crate::*;
@@ -8,14 +8,23 @@ fn corner_to_center(corner: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
     let y = corner.y + (size.y / 2.0);
     vector![x, y]
 }
-// fn center_to_corner(center: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
-//     corner + (size / 2.0)
-// }
+
+fn draw_line_alt(center: Vector2<f32>, rotation: f32, thickness: f32, length: f32, color: Color) {
+    let x1 = rotation.cos() * length / 2.0;
+    let y1 = (PI / 4.0 - rotation).cos() * length / 2.0;
+
+    let dx = center.x - x1;
+    let dy = center.y - y1;
+
+    let x2 = center.x * 2.0;
+    let y2 = center.y * 2.0;
+
+    draw_line(x1, y1, x2, y2, thickness, color);
+}
 
 #[derive(Debug)]
 pub struct Player {
     pub pos: Vector2<f32>,
-    pub vel: Vector2<f32>,
     pub size: Vector2<f32>,
     pub rot: f32,
     pub body_handle: RigidBodyHandle,
@@ -46,7 +55,6 @@ impl Player {
 
         Player {
             pos,
-            vel: vector![0.0, 0.0],
             rot: 0.0,
             size,
             body_handle: player_handle,
@@ -60,20 +68,25 @@ impl Player {
         let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
         let radius = self.size.x / 2.0 * SQRT_2;
 
-        draw_poly_lines(
+        draw_poly(
             translation.x,
             translation.y,
             4,
             radius,
             rotation + 45.0,
-            5.0,
             RED,
+        );
+
+        draw_line_alt(
+            vector![translation.x, translation.y],
+            rotation + 45.0,
+            self.size.x / 2.0,
+            self.size.y,
+            PURPLE,
         );
 
         draw_circle(translation.x, translation.y, 5.0, BLUE);
     }
-
-    // pub fn apply_vel (&self)
 }
 
 #[derive(Debug)]
@@ -120,7 +133,14 @@ impl FootBall {
     pub fn draw(&self, body_set: &RigidBodySet) {
         let translation = body_set[self.body_handle].translation();
         let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
-        draw_circle(translation.x, translation.y, self.radius, YELLOW);
+        draw_poly(
+            translation.x,
+            translation.y,
+            16,
+            self.radius,
+            rotation,
+            YELLOW,
+        );
 
         draw_circle(translation.x, translation.y, 5.0, BLUE);
     }
@@ -128,7 +148,6 @@ impl FootBall {
 
 pub struct Solid {
     pub pos: Vector2<f32>,
-    // pub vel: Vector2<f32>,
     pub size: Vector2<f32>,
     pub body_handle: RigidBodyHandle,
     pub collider_handle: ColliderHandle,
@@ -141,8 +160,6 @@ impl Solid {
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
     ) -> Solid {
-        // let half_space = vector![pos.x + size.x / 2.0, pos.y + size.y / 2.0];
-
         let body = RigidBodyBuilder::new_static()
             .translation(corner_to_center(pos, size))
             .rotation(0.0)
@@ -161,7 +178,6 @@ impl Solid {
     }
     pub fn draw(&self, body_set: &RigidBodySet) {
         let translation = body_set[self.body_handle].translation();
-        // let position = body_set[self.body_handle].position();
         let corner_x = translation.x - self.size.x / 2.0;
         let corner_y = translation.y - self.size.y / 2.0;
         draw_rectangle(corner_x, corner_y, self.size.x, self.size.y, GREEN);
