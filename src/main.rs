@@ -4,12 +4,17 @@ pub use rapier2d::prelude::*;
 mod objects;
 use objects::*;
 
-// Macroquad window config:
+// CONSTANTS:
+const ASPECT_RATIO: f32 = 16.0 / 9.0;
+const PIXEL_W: i32 = 1280;
+const PIXEL_H: i32 = (PIXEL_W as f32 / ASPECT_RATIO) as i32;
+
+// Macroquad WINDOW CONFIG:
 fn window_conf() -> Conf {
     Conf {
         window_title: "boink".to_owned(),
-        window_width: 800,
-        window_height: 600,
+        window_width: PIXEL_W,
+        window_height: PIXEL_H,
         high_dpi: false,
         fullscreen: false,
         // sample_count: 1,
@@ -18,12 +23,7 @@ fn window_conf() -> Conf {
     }
 }
 
-// pub struct GameObject {
-//     collider_handle: ColliderHandle,
-//     body_handle: RigidBodyHandle,
-//     render: Player,
-// }
-
+// MAIN:
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut rigid_body_set = RigidBodySet::new();
