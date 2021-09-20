@@ -28,8 +28,10 @@ fn window_conf() -> Conf {
 async fn main() {
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
+
     let mut players: Vec<&Player> = Vec::new();
-    let mut solids: Vec<Solid> = Vec::new();
+    let mut balls: Vec<&FootBall> = Vec::new();
+    let mut solids: Vec<&Solid> = Vec::new();
 
     let player1 = Player::new(
         vector![screen_width() / 2.0, screen_height() / 2.0],
@@ -39,13 +41,21 @@ async fn main() {
     );
     players.push(&player1);
 
+    let ball = FootBall::new(
+        vector![100.0, 100.0],
+        40.0,
+        &mut rigid_body_set,
+        &mut collider_set,
+    );
+    balls.push(&ball);
+
     let floor = Solid::new(
         vector![0.0, screen_height() - 20.0],
         vector![screen_width(), 20.0],
         &mut rigid_body_set,
         &mut collider_set,
     );
-    solids.push(floor);
+    solids.push(&floor);
 
     let ceiling = Solid::new(
         vector![0.0, 0.0],
@@ -53,7 +63,7 @@ async fn main() {
         &mut rigid_body_set,
         &mut collider_set,
     );
-    solids.push(ceiling);
+    solids.push(&ceiling);
 
     let wall_left = Solid::new(
         vector![0.0, 0.0],
@@ -61,7 +71,7 @@ async fn main() {
         &mut rigid_body_set,
         &mut collider_set,
     );
-    solids.push(wall_left);
+    solids.push(&wall_left);
 
     let wall_right = Solid::new(
         vector![screen_width() - 20.0, 0.0],
@@ -69,7 +79,7 @@ async fn main() {
         &mut rigid_body_set,
         &mut collider_set,
     );
-    solids.push(wall_right);
+    solids.push(&wall_right);
 
     //////////////////////////////////////////////////////////
     /* Create Rapier elements necessary for the simulation. */
@@ -141,9 +151,12 @@ async fn main() {
             &event_handler,
         );
 
-        // UPDATE GRAPHICS:
+        // UPDATE GRAPHIC ELEMENTS:
         for p in players.iter() {
             p.draw(&rigid_body_set);
+        }
+        for b in balls.iter() {
+            b.draw(&rigid_body_set);
         }
         for s in solids.iter() {
             s.draw(&rigid_body_set);

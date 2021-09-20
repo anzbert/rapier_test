@@ -76,6 +76,56 @@ impl Player {
     // pub fn apply_vel (&self)
 }
 
+#[derive(Debug)]
+pub struct FootBall {
+    pub pos: Vector2<f32>,
+    pub vel: Vector2<f32>,
+    pub radius: f32,
+    pub rot: f32,
+    pub body_handle: RigidBodyHandle,
+    pub collider_handle: ColliderHandle,
+}
+
+impl FootBall {
+    pub fn new(
+        pos: Vector2<f32>,
+        radius: f32,
+        body_set: &mut RigidBodySet,
+        coll_set: &mut ColliderSet,
+    ) -> FootBall {
+        let body = RigidBodyBuilder::new_dynamic()
+            .translation(pos)
+            .rotation(0.0)
+            .gravity_scale(0.1)
+            .build();
+        let ball_handle = body_set.insert(body);
+
+        let collider = ColliderBuilder::ball(radius)
+            .restitution(0.9)
+            .density(0.1)
+            .build();
+
+        let ball_collider_handle = coll_set.insert_with_parent(collider, ball_handle, body_set);
+
+        FootBall {
+            pos,
+            vel: vector![0.0, 0.0],
+            rot: 0.0,
+            radius,
+            body_handle: ball_handle,
+            collider_handle: ball_collider_handle,
+        }
+    }
+
+    pub fn draw(&self, body_set: &RigidBodySet) {
+        let translation = body_set[self.body_handle].translation();
+        let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
+        draw_circle(translation.x, translation.y, self.radius, YELLOW);
+
+        draw_circle(translation.x, translation.y, 5.0, BLUE);
+    }
+}
+
 pub struct Solid {
     pub pos: Vector2<f32>,
     // pub vel: Vector2<f32>,
