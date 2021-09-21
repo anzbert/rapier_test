@@ -35,7 +35,7 @@ async fn main() {
 
     let player1 = Player::new(
         vector![screen_width() / 2.0, screen_height() / 2.0],
-        vector![50.0, 50.0],
+        vector![120.0, 15.0],
         &mut rigid_body_set,
         &mut collider_set,
     );

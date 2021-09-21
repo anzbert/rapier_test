@@ -9,15 +9,30 @@ fn corner_to_center(corner: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
     vector![x, y]
 }
 
-fn draw_line_alt(center: Vector2<f32>, rotation: f32, thickness: f32, length: f32, color: Color) {
-    let x1 = rotation.cos() * length / 2.0;
-    let y1 = (PI / 4.0 - rotation).cos() * length / 2.0;
+fn draw_line_center(
+    center: Vector2<f32>,
+    rot_degrees: f32,
+    thickness: f32,
+    length: f32,
+    color: Color,
+) {
+    let half_length = length / 2.0;
+    let rot_radians = (rot_degrees + 90.0).to_radians();
 
-    let dx = center.x - x1;
-    let dy = center.y - y1;
+    let x_origin_1 = -half_length;
+    let x_origin_2 = half_length;
+    let y_origin_1 = 0.0;
+    let y_origin_2 = 0.0;
 
-    let x2 = center.x * 2.0;
-    let y2 = center.y * 2.0;
+    let x_rot_1 = x_origin_1 * rot_radians.cos() - y_origin_1 * rot_radians.sin();
+    let y_rot_1 = x_origin_1 * rot_radians.sin() + y_origin_1 * rot_radians.cos();
+    let x_rot_2 = x_origin_2 * rot_radians.cos() - y_origin_2 * rot_radians.sin();
+    let y_rot_2 = x_origin_2 * rot_radians.sin() + y_origin_2 * rot_radians.cos();
+
+    let x1 = x_rot_1 + center.x;
+    let y1 = y_rot_1 + center.y;
+    let x2 = x_rot_2 + center.x;
+    let y2 = y_rot_2 + center.y;
 
     draw_line(x1, y1, x2, y2, thickness, color);
 }
@@ -66,21 +81,11 @@ impl Player {
         let translation = body_set[self.body_handle].translation();
 
         let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
-        let radius = self.size.x / 2.0 * SQRT_2;
 
-        draw_poly(
-            translation.x,
-            translation.y,
-            4,
-            radius,
-            rotation + 45.0,
-            RED,
-        );
-
-        draw_line_alt(
+        draw_line_center(
             vector![translation.x, translation.y],
-            rotation + 45.0,
-            self.size.x / 2.0,
+            rotation,
+            self.size.x,
             self.size.y,
             PURPLE,
         );
