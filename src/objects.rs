@@ -1,5 +1,3 @@
-use std::f32::consts::{PI, SQRT_2};
-
 use crate::nalgebra::Vector2;
 use crate::*;
 
