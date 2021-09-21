@@ -7,34 +7,6 @@ fn corner_to_center(corner: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
     vector![x, y]
 }
 
-fn draw_line_center(
-    center: Vector2<f32>,
-    rot_degrees: f32,
-    thickness: f32,
-    length: f32,
-    color: Color,
-) {
-    let half_length = length / 2.0;
-    let rot_radians = (rot_degrees + 90.0).to_radians();
-
-    let x_origin_1 = -half_length;
-    let x_origin_2 = half_length;
-    let y_origin_1 = 0.0;
-    let y_origin_2 = 0.0;
-
-    let x_rot_1 = x_origin_1 * rot_radians.cos() - y_origin_1 * rot_radians.sin();
-    let y_rot_1 = x_origin_1 * rot_radians.sin() + y_origin_1 * rot_radians.cos();
-    let x_rot_2 = x_origin_2 * rot_radians.cos() - y_origin_2 * rot_radians.sin();
-    let y_rot_2 = x_origin_2 * rot_radians.sin() + y_origin_2 * rot_radians.cos();
-
-    let x1 = x_rot_1 + center.x;
-    let y1 = y_rot_1 + center.y;
-    let x2 = x_rot_2 + center.x;
-    let y2 = y_rot_2 + center.y;
-
-    draw_line(x1, y1, x2, y2, thickness, color);
-}
-
 #[derive(Debug)]
 pub struct Player {
     pub pos: Vector2<f32>,
@@ -61,7 +33,7 @@ impl Player {
 
         let half_size = size / 2.0;
         let collider = ColliderBuilder::cuboid(half_size.x, half_size.y)
-            .restitution(0.7)
+            .restitution(PLAYER_RESTITUTION)
             .build();
 
         let player_collider_handle = coll_set.insert_with_parent(collider, player_handle, body_set);
@@ -77,10 +49,10 @@ impl Player {
 
     pub fn draw(&self, body_set: &RigidBodySet) {
         let translation = body_set[self.body_handle].translation();
+        let rotation = body_set[self.body_handle].rotation().angle();
+        // let iso = body_set[self.body_handle].position();
 
-        let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
-
-        draw_line_center(
+        utils::draw_line_center(
             vector![translation.x, translation.y],
             rotation,
             self.size.x,
@@ -112,13 +84,13 @@ impl FootBall {
         let body = RigidBodyBuilder::new_dynamic()
             .translation(pos)
             .rotation(0.0)
-            .gravity_scale(0.1)
+            .gravity_scale(BALL_GRAV_SCALE)
             .build();
         let ball_handle = body_set.insert(body);
 
         let collider = ColliderBuilder::ball(radius)
-            .restitution(0.9)
-            .density(0.1)
+            .restitution(BALL_RESTITUTION)
+            .density(BALL_DENSITY)
             .build();
 
         let ball_collider_handle = coll_set.insert_with_parent(collider, ball_handle, body_set);

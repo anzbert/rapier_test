@@ -1,13 +1,13 @@
 pub use macroquad::prelude::*;
 pub use rapier2d::prelude::*;
 
+mod constants;
+use constants::*;
+
 mod objects;
 use objects::*;
 
-// CONSTANTS:
-const ASPECT_RATIO: f32 = 16.0 / 9.0;
-const PIXEL_W: i32 = 1280;
-const PIXEL_H: i32 = (PIXEL_W as f32 / ASPECT_RATIO) as i32;
+mod utils;
 
 // Macroquad WINDOW CONFIG:
 fn window_conf() -> Conf {
