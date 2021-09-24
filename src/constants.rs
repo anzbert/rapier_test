@@ -4,7 +4,7 @@ pub const PIXEL_W: i32 = 1280;
 pub const PIXEL_H: i32 = (PIXEL_W as f32 / ASPECT_RATIO) as i32;
 
 pub const ARENA_WIDTH: f32 = 105.0; // in m
-pub const ARENA_HEIGHT: f32 = 30.0; // in m
+pub const ARENA_HEIGHT: f32 = 40.0; // in m
 
 pub const PIXELS_PER_METRE: f32 = PIXEL_W as f32 / ARENA_WIDTH;
 

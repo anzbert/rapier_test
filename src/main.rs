@@ -52,33 +52,39 @@ async fn main() {
     balls.push(&ball);
 
     // ARENA:
+    let wall_thickness = 2.0;
+
     let floor = Solid::new(
-        vector![0.0, ARENA_HEIGHT - 0.5],
-        vector![ARENA_WIDTH, 0.5],
+        "floor".to_string(),
+        vector![0.0, ARENA_HEIGHT - wall_thickness],
+        vector![ARENA_WIDTH, wall_thickness],
         &mut rigid_body_set,
         &mut collider_set,
     );
     solids.push(&floor);
 
     let ceiling = Solid::new(
+        "ceiling".to_string(),
         vector![0.0, 0.0],
-        vector![ARENA_WIDTH, 0.5],
+        vector![ARENA_WIDTH, wall_thickness],
         &mut rigid_body_set,
         &mut collider_set,
     );
     solids.push(&ceiling);
 
     let wall_left = Solid::new(
+        "wall_left".to_string(),
         vector![0.0, 0.0],
-        vector![0.5, ARENA_HEIGHT],
+        vector![wall_thickness, ARENA_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
     );
     solids.push(&wall_left);
 
     let wall_right = Solid::new(
-        vector![ARENA_WIDTH - 0.5, 0.0],
-        vector![0.5, ARENA_HEIGHT],
+        "wall_right".to_string(),
+        vector![ARENA_WIDTH - wall_thickness, 0.0],
+        vector![wall_thickness, ARENA_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -115,23 +121,23 @@ async fn main() {
         // UPDATE CONTROLS:
         if is_key_down(KeyCode::Right) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![15.0, 0.0], true);
+            rigid_body.apply_impulse(vector![10.0, 0.0], true);
         }
         if is_key_down(KeyCode::Left) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![-15.0, 0.0], true);
+            rigid_body.apply_impulse(vector![-10.0, 0.0], true);
         }
         if is_key_down(KeyCode::Up) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![0.0, -15.0], true);
+            rigid_body.apply_impulse(vector![0.0, -10.0], true);
         }
         if is_key_down(KeyCode::Q) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(-2.0, true);
+            rigid_body.apply_torque_impulse(-1.0, true);
         }
         if is_key_down(KeyCode::E) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(2.0, true);
+            rigid_body.apply_torque_impulse(1.0, true);
         }
 
         // UPDATE PHYSICS:
@@ -162,7 +168,7 @@ async fn main() {
             b.draw(&rigid_body_set);
         }
         for s in solids.iter() {
-            s.draw(&rigid_body_set);
+            s.draw(&rigid_body_set, &collider_set);
         }
 
         next_frame().await

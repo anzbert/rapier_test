@@ -52,6 +52,8 @@ impl Player {
         let rotation = body_set[self.body_handle].rotation().angle();
         // let iso = body_set[self.body_handle].position();
 
+        println!("player pos - x: {} y: {}", translation.x, translation.y);
+
         utils::draw_line_center(
             pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
             rotation,
@@ -130,6 +132,7 @@ impl FootBall {
 }
 
 pub struct Solid {
+    pub name: String,
     pub pos: Vector2<f32>,
     pub size: Vector2<f32>,
     pub body_handle: RigidBodyHandle,
@@ -138,6 +141,7 @@ pub struct Solid {
 
 impl Solid {
     pub fn new(
+        name: String,
         pos: Vector2<f32>,
         size: Vector2<f32>,
         body_set: &mut RigidBodySet,
@@ -153,13 +157,18 @@ impl Solid {
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {
+            name,
             pos,
             size,
             body_handle: solid_handle,
             collider_handle: solid_collider_handle,
         }
     }
-    pub fn draw(&self, body_set: &RigidBodySet) {
+    pub fn draw(&self, body_set: &RigidBodySet, coll_set: &ColliderSet) {
+        let cuboid = coll_set[self.collider_handle].shape().as_cuboid(); // and then access its dimensions with
+
+        println!("{} : {:?}", self.name, cuboid.unwrap().half_extents);
+
         let translation = body_set[self.body_handle].translation();
         let corner_x = translation.x - self.size.x / 2.0;
         let corner_y = translation.y - self.size.y / 2.0;
