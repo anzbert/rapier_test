@@ -16,7 +16,7 @@ pub const BALL_RADIUS: f32 = 2.5; // in m
 // BALL:
 pub const BALL_RESTITUTION: f32 = 0.9;
 pub const BALL_GRAV_SCALE: f32 = 0.1;
-pub const BALL_DENSITY: f32 = 0.1;
+pub const BALL_DENSITY: f32 = 0.5;
 
 // PLAYER:
-pub const PLAYER_RESTITUTION: f32 = 0.7;
+pub const PLAYER_RESTITUTION: f32 = 0.3;

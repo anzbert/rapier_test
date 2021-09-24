@@ -115,28 +115,28 @@ async fn main() {
         // UPDATE CONTROLS:
         if is_key_down(KeyCode::Right) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![50.0, 0.0], true);
+            rigid_body.apply_impulse(vector![15.0, 0.0], true);
         }
         if is_key_down(KeyCode::Left) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![-50.0, 0.0], true);
+            rigid_body.apply_impulse(vector![-15.0, 0.0], true);
         }
         if is_key_down(KeyCode::Up) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![0.0, -100.0], true);
+            rigid_body.apply_impulse(vector![0.0, -15.0], true);
         }
         if is_key_down(KeyCode::Q) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(-100.0, true);
+            rigid_body.apply_torque_impulse(-2.0, true);
         }
         if is_key_down(KeyCode::E) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(100.0, true);
+            rigid_body.apply_torque_impulse(2.0, true);
         }
 
         // UPDATE PHYSICS:
         let integration_parameters = IntegrationParameters {
-            dt: get_frame_time() * 4.0, // maybe needs to be in the game loop ?
+            dt: get_frame_time(), // maybe needs to be in the game loop ?
             ..Default::default()
         };
 
