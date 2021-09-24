@@ -165,9 +165,8 @@ impl Solid {
         }
     }
     pub fn draw(&self, body_set: &RigidBodySet, coll_set: &ColliderSet) {
-        let cuboid = coll_set[self.collider_handle].shape().as_cuboid(); // and then access its dimensions with
-
-        println!("{} : {:?}", self.name, cuboid.unwrap().half_extents);
+        // let cuboid = coll_set[self.collider_handle].shape().as_cuboid(); // and then access its dimensions with
+        // println!("{} : {:?}", self.name, cuboid.unwrap().half_extents);
 
         let translation = body_set[self.body_handle].translation();
         let corner_x = translation.x - self.size.x / 2.0;
