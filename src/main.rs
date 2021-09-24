@@ -143,7 +143,7 @@ async fn main() {
         // UPDATE PHYSICS:
         let frame_time = get_frame_time();
         // let fps = 1.0 / get_fps() as f32;
-        // println!("frm time: {}", fps);
+        // println!("frm time: {}", frame_time);
 
         let integration_parameters = IntegrationParameters {
             dt: frame_time, // maybe needs to be in the game loop ?
