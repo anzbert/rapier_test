@@ -127,7 +127,7 @@ async fn main() {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
             rigid_body.apply_impulse(vector![-10.0, 0.0], true);
         }
-        if is_key_down(KeyCode::Up) {
+        if is_key_down(KeyCode::Space) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
             rigid_body.apply_impulse(vector![0.0, -10.0], true);
         }
@@ -147,6 +147,7 @@ async fn main() {
 
         let integration_parameters = IntegrationParameters {
             dt: frame_time, // maybe needs to be in the game loop ?
+            prediction_distance: 0.008,
             ..Default::default()
         };
 
