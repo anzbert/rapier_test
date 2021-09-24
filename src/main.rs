@@ -8,6 +8,7 @@ mod objects;
 use objects::*;
 
 mod utils;
+use crate::utils::*;
 
 // Macroquad WINDOW CONFIG:
 fn window_conf() -> Conf {
@@ -29,29 +30,31 @@ async fn main() {
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
 
+    // ADD OBJECTS:
     let mut players: Vec<&Player> = Vec::new();
     let mut balls: Vec<&FootBall> = Vec::new();
     let mut solids: Vec<&Solid> = Vec::new();
 
     let player1 = Player::new(
-        vector![screen_width() / 2.0, screen_height() / 2.0],
-        vector![120.0, 15.0],
+        vector![10.0, ARENA_HEIGHT - 10.0],
+        vector![CAR_LENGTH, CAR_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
     );
     players.push(&player1);
 
     let ball = FootBall::new(
-        vector![100.0, 100.0],
-        40.0,
+        vector![ARENA_WIDTH / 2.0, ARENA_HEIGHT - 10.0],
+        BALL_RADIUS,
         &mut rigid_body_set,
         &mut collider_set,
     );
     balls.push(&ball);
 
+    // ARENA:
     let floor = Solid::new(
-        vector![0.0, screen_height() - 20.0],
-        vector![screen_width(), 20.0],
+        vector![0.0, ARENA_HEIGHT - 0.5],
+        vector![ARENA_WIDTH, 0.5],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -59,7 +62,7 @@ async fn main() {
 
     let ceiling = Solid::new(
         vector![0.0, 0.0],
-        vector![screen_width(), 20.0],
+        vector![ARENA_WIDTH, 0.5],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -67,15 +70,15 @@ async fn main() {
 
     let wall_left = Solid::new(
         vector![0.0, 0.0],
-        vector![20.0, screen_height()],
+        vector![0.5, ARENA_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
     );
     solids.push(&wall_left);
 
     let wall_right = Solid::new(
-        vector![screen_width() - 20.0, 0.0],
-        vector![20.0, screen_height()],
+        vector![ARENA_WIDTH - 0.5, 0.0],
+        vector![0.5, ARENA_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
     );
@@ -112,23 +115,23 @@ async fn main() {
         // UPDATE CONTROLS:
         if is_key_down(KeyCode::Right) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![1000.0, 0.0], true);
+            rigid_body.apply_impulse(vector![50.0, 0.0], true);
         }
         if is_key_down(KeyCode::Left) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![-1000.0, 0.0], true);
+            rigid_body.apply_impulse(vector![-50.0, 0.0], true);
         }
         if is_key_down(KeyCode::Up) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_impulse(vector![0.0, -2500.0], true);
+            rigid_body.apply_impulse(vector![0.0, -100.0], true);
         }
         if is_key_down(KeyCode::Q) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(-10000.0, true);
+            rigid_body.apply_torque_impulse(-100.0, true);
         }
         if is_key_down(KeyCode::E) {
             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(10000.0, true);
+            rigid_body.apply_torque_impulse(100.0, true);
         }
 
         // UPDATE PHYSICS:

@@ -53,21 +53,25 @@ impl Player {
         // let iso = body_set[self.body_handle].position();
 
         utils::draw_line_center(
-            vector![translation.x, translation.y],
+            pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
             rotation,
-            self.size.x,
-            self.size.y,
+            size_mtr_to_pxl(self.size.x),
+            size_mtr_to_pxl(self.size.y),
             PURPLE,
         );
 
-        draw_circle(translation.x, translation.y, 5.0, BLUE);
+        draw_circle(
+            pos_x_mtr_to_pxl(translation.x),
+            pos_y_mtr_to_pxl(translation.y),
+            size_mtr_to_pxl(0.3),
+            BLUE,
+        );
     }
 }
 
 #[derive(Debug)]
 pub struct FootBall {
     pub pos: Vector2<f32>,
-    pub vel: Vector2<f32>,
     pub radius: f32,
     pub rot: f32,
     pub body_handle: RigidBodyHandle,
@@ -97,7 +101,6 @@ impl FootBall {
 
         FootBall {
             pos,
-            vel: vector![0.0, 0.0],
             rot: 0.0,
             radius,
             body_handle: ball_handle,
@@ -109,15 +112,20 @@ impl FootBall {
         let translation = body_set[self.body_handle].translation();
         let rotation = body_set[self.body_handle].rotation().angle().to_degrees();
         draw_poly(
-            translation.x,
-            translation.y,
+            pos_x_mtr_to_pxl(translation.x),
+            pos_y_mtr_to_pxl(translation.y),
             16,
-            self.radius,
+            size_mtr_to_pxl(self.radius),
             rotation,
             YELLOW,
         );
 
-        draw_circle(translation.x, translation.y, 5.0, BLUE);
+        draw_circle(
+            pos_x_mtr_to_pxl(translation.x),
+            pos_y_mtr_to_pxl(translation.y),
+            size_mtr_to_pxl(0.3),
+            BLUE,
+        );
     }
 }
 
@@ -155,8 +163,19 @@ impl Solid {
         let translation = body_set[self.body_handle].translation();
         let corner_x = translation.x - self.size.x / 2.0;
         let corner_y = translation.y - self.size.y / 2.0;
-        draw_rectangle(corner_x, corner_y, self.size.x, self.size.y, GREEN);
+        draw_rectangle(
+            pos_x_mtr_to_pxl(corner_x),
+            pos_y_mtr_to_pxl(corner_y),
+            size_mtr_to_pxl(self.size.x),
+            size_mtr_to_pxl(self.size.y),
+            GREEN,
+        );
 
-        draw_circle(translation.x, translation.y, 5.0, BLUE);
+        draw_circle(
+            pos_x_mtr_to_pxl(translation.x),
+            pos_y_mtr_to_pxl(translation.y),
+            size_mtr_to_pxl(0.3),
+            BLUE,
+        );
     }
 }

@@ -3,6 +3,22 @@ use std::f32::consts::PI;
 
 use crate::*;
 
+pub fn size_mtr_to_pxl(metres: f32) -> f32 {
+    metres * PIXELS_PER_METRE
+}
+pub fn pos_x_mtr_to_pxl(pos_x: f32) -> f32 {
+    pos_x * PIXELS_PER_METRE
+}
+pub fn pos_y_mtr_to_pxl(pos_y: f32) -> f32 {
+    let floor = screen_height() / 2.0 - size_mtr_to_pxl(ARENA_HEIGHT) / 2.0;
+    floor + (pos_y * PIXELS_PER_METRE)
+}
+pub fn pos_vec_mtr_to_pxl(position: Vector2<f32>) -> Vector2<f32> {
+    let x = pos_x_mtr_to_pxl(position.x);
+    let y = pos_y_mtr_to_pxl(position.y);
+    vector![x, y]
+}
+
 pub fn draw_line_center(
     center: Vector2<f32>,
     rotation: f32,
