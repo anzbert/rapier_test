@@ -8,7 +8,7 @@ pub const ARENA_HEIGHT: f32 = 40.0; // in m
 
 pub const PIXELS_PER_METRE: f32 = PIXEL_W as f32 / ARENA_WIDTH;
 
-pub const CAR_LENGTH: f32 = 4.5; // in m
+pub const CAR_LENGTH: f32 = 6.5; // in m
 pub const CAR_HEIGHT: f32 = 1.65; // in m
 
 pub const BALL_RADIUS: f32 = 2.5; // in m

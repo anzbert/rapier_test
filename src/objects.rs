@@ -65,7 +65,7 @@ impl Player {
             1 | 2 => {
                 if self.jump_state < 2 {
                     let rigid_body = body_set.get_mut(self.body_handle).unwrap();
-                    rigid_body.apply_impulse(vector![0.0, -50.0], true);
+                    rigid_body.apply_impulse(vector![0.0, -80.0], true);
                     self.jump_state += 1;
                     self.jump_time = now();
                 }

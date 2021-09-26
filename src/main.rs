@@ -92,7 +92,8 @@ async fn main() {
 
     //////////////////////////////////////////////////////////
     /* Create Rapier elements necessary for the simulation. */
-    let gravity = vector![0.0, 9.81];
+    // let gravity = vector![0.0, 9.81];
+    let gravity = vector![0.0, 0.0];
     // let integration_parameters = IntegrationParameters {
     //     dt: get_frame_time() * 4.0, // maybe needs to be in the game loop ?
     //     ..Default::default()
