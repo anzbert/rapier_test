@@ -1,5 +1,4 @@
 use crate::nalgebra::Vector2;
-use std::f32::consts::PI;
 
 use crate::*;
 

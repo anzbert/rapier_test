@@ -1,11 +1,15 @@
 pub use macroquad::prelude::*;
 pub use rapier2d::prelude::*;
+use std::f32::consts::PI;
 
 mod constants;
 use constants::*;
 
 mod objects;
 use objects::*;
+
+mod car;
+// use car::*;
 
 mod utils;
 use crate::utils::*;
@@ -27,8 +31,24 @@ fn window_conf() -> Conf {
 // MAIN:
 #[macroquad::main(window_conf)]
 async fn main() {
+    //////////////////////////////////////////////////////////
+    /* Create Rapier elements necessary for the simulation. */
+    let gravity = vector![0.0, 9.81];
+    // let integration_parameters = IntegrationParameters {
+    //     dt: get_frame_time(), // maybe needs to be in the game loop ?
+    //     ..Default::default()
+    // };
+    let mut physics_pipeline = PhysicsPipeline::new();
+    let mut island_manager = IslandManager::new();
+    let mut broad_phase = BroadPhase::new();
+    let mut narrow_phase = NarrowPhase::new();
+    let mut ccd_solver = CCDSolver::new();
+    let physics_hooks = ();
+    let event_handler = ();
+
     let mut rigid_body_set = RigidBodySet::new();
     let mut collider_set = ColliderSet::new();
+    let mut joint_set = JointSet::new();
 
     // ADD OBJECTS:
     let mut players: Vec<&Player> = Vec::new();
@@ -36,10 +56,11 @@ async fn main() {
     let mut solids: Vec<&Solid> = Vec::new();
 
     let mut player1 = Player::new(
-        vector![10.0, ARENA_HEIGHT - 10.0],
+        vector![10.0, ARENA_HEIGHT - 20.0],
         vector![CAR_LENGTH, CAR_HEIGHT],
         &mut rigid_body_set,
         &mut collider_set,
+        &mut joint_set,
     );
     players.push(&player1);
 
@@ -90,25 +111,15 @@ async fn main() {
     );
     solids.push(&wall_right);
 
-    //////////////////////////////////////////////////////////
-    /* Create Rapier elements necessary for the simulation. */
-    // let gravity = vector![0.0, 9.81];
-    let gravity = vector![0.0, 0.0];
-    // let integration_parameters = IntegrationParameters {
-    //     dt: get_frame_time() * 4.0, // maybe needs to be in the game loop ?
-    //     ..Default::default()
-    // };
-    let mut physics_pipeline = PhysicsPipeline::new();
-    let mut island_manager = IslandManager::new();
-    let mut broad_phase = BroadPhase::new();
-    let mut narrow_phase = NarrowPhase::new();
-    let mut joint_set = JointSet::new();
-    let mut ccd_solver = CCDSolver::new();
-    let physics_hooks = ();
-    let event_handler = ();
-
     // key variable:
     let mut jump_pressed = false;
+
+    let carzz = car::Car::new(
+        vector![ARENA_WIDTH / 4.0, ARENA_HEIGHT / 3.0],
+        &mut rigid_body_set,
+        &mut collider_set,
+        &mut joint_set,
+    );
 
     // GAME LOOP:
     /* Run the game loop, stepping the simulation once per frame. */
@@ -170,12 +181,8 @@ async fn main() {
         }
 
         // UPDATE PHYSICS:
-        let frame_time = get_frame_time();
-        // let fps = 1.0 / get_fps() as f32;
-        // println!("frm time: {}", frame_time);
-
         let integration_parameters = IntegrationParameters {
-            dt: frame_time, // maybe needs to be in the game loop ?
+            dt: get_frame_time(), // maybe needs to be in the game loop ?
             prediction_distance: 0.008,
             ..Default::default()
         };
@@ -214,6 +221,8 @@ async fn main() {
                 // println!("contact");
             }
         }
+
+        carzz.draw(&rigid_body_set);
 
         next_frame().await
     }

@@ -18,6 +18,8 @@ pub struct Player {
     pub rot: f32,
     pub body_handle: RigidBodyHandle,
     pub collider_handle: ColliderHandle,
+    pub wheel1_handle: RigidBodyHandle,
+    pub wheel1_radius: f32,
     pub jump_state: usize,
     pub jump_time: f64,
 }
@@ -28,9 +30,11 @@ impl Player {
         size: Vector2<f32>,
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
+        joint_set: &mut JointSet,
     ) -> Player {
         let size = size;
 
+        // body
         let body = RigidBodyBuilder::new_dynamic()
             .translation(corner_to_center(pos, size))
             .rotation(0.0)
@@ -44,12 +48,33 @@ impl Player {
 
         let player_collider_handle = coll_set.insert_with_parent(collider, player_handle, body_set);
 
+        // wheel
+        let wheel1 = RigidBodyBuilder::new_dynamic()
+            .translation(corner_to_center(vector![pos.x - 0.0, pos.y + 0.0], size))
+            // .rotation(0.0)
+            .build();
+        let wheel1_handle = body_set.insert(wheel1);
+
+        let wheel1_radius = 1.0;
+        let wheel1_collider = ColliderBuilder::ball(wheel1_radius)
+            .restitution(0.7)
+            .build();
+
+        let _wheel1_collider_handle =
+            coll_set.insert_with_parent(wheel1_collider, wheel1_handle, body_set);
+
+        // joint
+        let wheel1_joint = BallJoint::new(point![0.0, 0.0], point![0.0, 0.0]);
+        joint_set.insert(player_handle, wheel1_handle, wheel1_joint);
+
         Player {
             pos,
             rot: 0.0,
             size,
             body_handle: player_handle,
             collider_handle: player_collider_handle,
+            wheel1_handle,
+            wheel1_radius,
             jump_state: 0,
             jump_time: now(),
         }
@@ -65,7 +90,7 @@ impl Player {
             1 | 2 => {
                 if self.jump_state < 2 {
                     let rigid_body = body_set.get_mut(self.body_handle).unwrap();
-                    rigid_body.apply_impulse(vector![0.0, -80.0], true);
+                    rigid_body.apply_impulse(vector![0.0, -150.0], true);
                     self.jump_state += 1;
                     self.jump_time = now();
                 }
@@ -97,6 +122,25 @@ impl Player {
             size_mtr_to_pxl(0.3),
             BLUE,
         );
+
+        // wheel
+        let w1_translation = body_set[self.wheel1_handle].translation();
+        let w1_rotation = body_set[self.wheel1_handle].rotation().angle().to_degrees();
+        draw_poly(
+            pos_x_mtr_to_pxl(w1_translation.x),
+            pos_y_mtr_to_pxl(w1_translation.y),
+            8,
+            size_mtr_to_pxl(self.wheel1_radius),
+            w1_rotation,
+            YELLOW,
+        );
+
+        // draw_circle(
+        //     pos_x_mtr_to_pxl(translation.x),
+        //     pos_y_mtr_to_pxl(translation.y),
+        //     size_mtr_to_pxl(0.3),
+        //     BLUE,
+        // );
     }
 }
 
