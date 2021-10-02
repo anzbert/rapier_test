@@ -18,8 +18,7 @@ pub struct Player {
     pub rot: f32,
     pub body_handle: RigidBodyHandle,
     pub collider_handle: ColliderHandle,
-    pub wheel1_handle: RigidBodyHandle,
-    pub wheel1_radius: f32,
+
     pub jump_state: usize,
     pub jump_time: f64,
 }
@@ -37,7 +36,7 @@ impl Player {
         // body
         let body = RigidBodyBuilder::new_dynamic()
             .translation(corner_to_center(pos, size))
-            .rotation(0.0)
+            // .rotation(0.0)
             .build();
         let player_handle = body_set.insert(body);
 
@@ -48,24 +47,24 @@ impl Player {
 
         let player_collider_handle = coll_set.insert_with_parent(collider, player_handle, body_set);
 
-        // wheel
-        let wheel1 = RigidBodyBuilder::new_dynamic()
-            .translation(corner_to_center(vector![pos.x - 0.0, pos.y + 0.0], size))
-            // .rotation(0.0)
-            .build();
-        let wheel1_handle = body_set.insert(wheel1);
+        // // wheel
+        // let wheel1 = RigidBodyBuilder::new_dynamic()
+        //     .translation(corner_to_center(vector![pos.x - 0.0, pos.y + 0.0], size))
+        //     // .rotation(0.0)
+        //     .build();
+        // let wheel1_handle = body_set.insert(wheel1);
 
-        let wheel1_radius = 1.0;
-        let wheel1_collider = ColliderBuilder::ball(wheel1_radius)
-            .restitution(0.7)
-            .build();
+        // let wheel1_radius = 1.0;
+        // let wheel1_collider = ColliderBuilder::ball(wheel1_radius)
+        //     .restitution(0.7)
+        //     .build();
 
-        let _wheel1_collider_handle =
-            coll_set.insert_with_parent(wheel1_collider, wheel1_handle, body_set);
+        // let _wheel1_collider_handle =
+        //     coll_set.insert_with_parent(wheel1_collider, wheel1_handle, body_set);
 
-        // joint
-        let wheel1_joint = BallJoint::new(point![0.0, 0.0], point![0.0, 0.0]);
-        joint_set.insert(player_handle, wheel1_handle, wheel1_joint);
+        // // joint
+        // let wheel1_joint = BallJoint::new(point![0.0, 0.0], point![0.0, 0.0]);
+        // joint_set.insert(player_handle, wheel1_handle, wheel1_joint);
 
         Player {
             pos,
@@ -73,8 +72,7 @@ impl Player {
             size,
             body_handle: player_handle,
             collider_handle: player_collider_handle,
-            wheel1_handle,
-            wheel1_radius,
+
             jump_state: 0,
             jump_time: now(),
         }
@@ -110,7 +108,7 @@ impl Player {
 
         utils::draw_line_center(
             pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
-            rotation,
+            rotation + (PI / 2.0),
             size_mtr_to_pxl(self.size.x),
             size_mtr_to_pxl(self.size.y),
             PURPLE,
@@ -123,17 +121,17 @@ impl Player {
             BLUE,
         );
 
-        // wheel
-        let w1_translation = body_set[self.wheel1_handle].translation();
-        let w1_rotation = body_set[self.wheel1_handle].rotation().angle().to_degrees();
-        draw_poly(
-            pos_x_mtr_to_pxl(w1_translation.x),
-            pos_y_mtr_to_pxl(w1_translation.y),
-            8,
-            size_mtr_to_pxl(self.wheel1_radius),
-            w1_rotation,
-            YELLOW,
-        );
+        // // wheel
+        // let w1_translation = body_set[self.wheel1_handle].translation();
+        // let w1_rotation = body_set[self.wheel1_handle].rotation().angle().to_degrees();
+        // draw_poly(
+        //     pos_x_mtr_to_pxl(w1_translation.x),
+        //     pos_y_mtr_to_pxl(w1_translation.y),
+        //     8,
+        //     size_mtr_to_pxl(self.wheel1_radius),
+        //     w1_rotation,
+        //     YELLOW,
+        // );
 
         // draw_circle(
         //     pos_x_mtr_to_pxl(translation.x),

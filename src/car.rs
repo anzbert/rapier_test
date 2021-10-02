@@ -5,7 +5,7 @@ use crate::*;
 
 const HEIGHT: f32 = 1.5;
 const LENGTH: f32 = 6.0;
-const WHEEL_RADIUS: f32 = 0.5;
+const WHEEL_RADIUS: f32 = 1.0;
 const WHEEL_FRONT_X_OFFSET: f32 = 1.5;
 const WHEEL_FRONT_Y_OFFSET: f32 = 0.2;
 const WHEEL_BACK_X_OFFSET: f32 = -1.5;
@@ -50,8 +50,12 @@ impl CarPart {
         let body_handle = body_set.insert(body);
 
         let collider = match shape {
-            SelectPart::Body => ColliderBuilder::cuboid(half_extents.x, half_extents.y).build(),
-            SelectPart::Wheel => ColliderBuilder::ball(half_extents.x).build(),
+            SelectPart::Body => ColliderBuilder::cuboid(half_extents.x, half_extents.y)
+                .collision_groups(InteractionGroups::new(0b0100, 0b1101))
+                .build(),
+            SelectPart::Wheel => ColliderBuilder::ball(half_extents.x)
+                .collision_groups(InteractionGroups::new(0b0010, 0b1011))
+                .build(),
         };
         let coll_handle = coll_set.insert_with_parent(collider, body_handle, body_set);
 
@@ -117,10 +121,14 @@ impl Car {
         );
 
         // ASSEMBLE CAR:
-        let _wheel_front_joint = BallJoint::new(
+        let mut _wheel_front_joint = BallJoint::new(
             point![0.0, 0.0],
             point![WHEEL_FRONT_X_OFFSET, WHEEL_FRONT_Y_OFFSET],
         );
+
+        // motor test:
+        _wheel_front_joint.configure_motor_velocity(1.0, 0.5);
+
         joint_set.insert(
             wheel_front.get_body_handle(),
             car_body.get_body_handle(),
@@ -140,7 +148,7 @@ impl Car {
         Car {
             position,
             velocity: vector![0.0, 0.0],
-            parts: vec![wheel_front, wheel_back, car_body],
+            parts: vec![car_body, wheel_front, wheel_back],
         }
     }
 
@@ -156,8 +164,8 @@ impl Car {
                     utils::draw_line_center(
                         pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
                         rotation,
-                        size_mtr_to_pxl(CAR_HEIGHT),
-                        size_mtr_to_pxl(CAR_LENGTH),
+                        size_mtr_to_pxl(HEIGHT),
+                        size_mtr_to_pxl(LENGTH),
                         RED,
                     );
                 }
@@ -167,7 +175,7 @@ impl Car {
                         pos_y_mtr_to_pxl(translation.y),
                         8,
                         size_mtr_to_pxl(WHEEL_RADIUS),
-                        rotation,
+                        rotation.to_degrees(),
                         ORANGE,
                     );
                 }
@@ -175,7 +183,7 @@ impl Car {
             draw_circle(
                 pos_x_mtr_to_pxl(translation.x),
                 pos_y_mtr_to_pxl(translation.y),
-                size_mtr_to_pxl(0.3),
+                size_mtr_to_pxl(0.2),
                 BLUE,
             );
         }

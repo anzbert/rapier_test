@@ -26,7 +26,7 @@ pub fn draw_line_center(
     color: Color,
 ) {
     let half_length = length / 2.0;
-    let rot_radians = rotation + PI / 2.0; // rotate to neutral
+    let rot_radians = rotation; // rotate to neutral
 
     // create at origin:
     let x_origin_1 = -half_length;
