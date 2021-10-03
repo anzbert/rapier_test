@@ -29,7 +29,7 @@ impl Player {
         size: Vector2<f32>,
         body_set: &mut RigidBodySet,
         coll_set: &mut ColliderSet,
-        joint_set: &mut JointSet,
+        _joint_set: &mut JointSet,
     ) -> Player {
         let size = size;
 
@@ -95,7 +95,7 @@ impl Player {
             }
             _ => {}
         };
-        println!("state {}", self.jump_state);
+        // println!("state {}", self.jump_state);
         // }
     }
 
@@ -167,6 +167,7 @@ impl FootBall {
 
         let collider = ColliderBuilder::ball(radius)
             .restitution(BALL_RESTITUTION)
+            .collision_groups(InteractionGroups::new(0b1000, 0b1101))
             .density(BALL_DENSITY)
             .build();
 
@@ -224,7 +225,9 @@ impl Solid {
             .build();
         let solid_handle = body_set.insert(body);
 
-        let collider = ColliderBuilder::cuboid(size.x / 2.0, size.y / 2.0).build();
+        let collider = ColliderBuilder::cuboid(size.x / 2.0, size.y / 2.0)
+            // .collision_groups(InteractionGroups::new(0b1010, 0b1011))
+            .build();
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {

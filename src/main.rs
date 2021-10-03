@@ -1,5 +1,6 @@
 pub use macroquad::prelude::*;
 pub use rapier2d::prelude::*;
+use std::collections::HashMap;
 use std::f32::consts::PI;
 
 mod constants;
@@ -33,7 +34,7 @@ fn window_conf() -> Conf {
 async fn main() {
     //////////////////////////////////////////////////////////
     /* Create Rapier elements necessary for the simulation. */
-    let gravity = vector![0.0, 9.81];
+    let gravity = vector![0.0, 29.81];
     // let integration_parameters = IntegrationParameters {
     //     dt: get_frame_time(), // maybe needs to be in the game loop ?
     //     ..Default::default()
@@ -112,10 +113,10 @@ async fn main() {
     solids.push(&wall_right);
 
     // key variable:
-    let mut jump_pressed = false;
+    // let mut jump_pressed = false;
 
     let carzz = car::Car::new(
-        vector![ARENA_WIDTH / 4.0, ARENA_HEIGHT / 3.0],
+        vector![ARENA_WIDTH / 4.0, ARENA_HEIGHT - 4.0],
         &mut rigid_body_set,
         &mut collider_set,
         &mut joint_set,
@@ -134,50 +135,61 @@ async fn main() {
         }
 
         // UPDATE CONTROLS:
-        if is_key_down(KeyCode::Right) {
-            match player1.jump_state {
-                1 | 2 => {
-                    let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-                    rigid_body.apply_torque_impulse(1.0, true);
-                }
-                0 | _ => {
-                    let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-                    rigid_body.apply_impulse(vector![10.0, 0.0], true);
-                }
-            }
-        }
+        // if is_key_down(KeyCode::Right) {
+        //     match player1.jump_state {
+        //         1 | 2 => {
+        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+        //             rigid_body.apply_torque_impulse(1.0, true);
+        //         }
+        //         0 | _ => {
+        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+        //             rigid_body.apply_impulse(vector![10.0, 0.0], true);
+        //         }
+        //     }
+        // }
 
-        if is_key_down(KeyCode::Left) {
-            match player1.jump_state {
-                1 | 2 => {
-                    let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-                    rigid_body.apply_torque_impulse(-1.0, true);
-                }
-                0 | _ => {
-                    let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-                    rigid_body.apply_impulse(vector![-10.0, 0.0], true);
-                }
-            }
-        }
+        // if is_key_down(KeyCode::Left) {
+        //     match player1.jump_state {
+        //         1 | 2 => {
+        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+        //             rigid_body.apply_torque_impulse(-1.0, true);
+        //         }
+        //         0 | _ => {
+        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
+        //             rigid_body.apply_impulse(vector![-10.0, 0.0], true);
+        //         }
+        //     }
+        // }
 
-        if is_key_down(KeyCode::Up) {
-            if !jump_pressed {
-                jump_pressed = true;
-                player1.set_jump_state(1, &mut rigid_body_set);
-            }
-        }
-        if is_key_released(KeyCode::Up) {
-            jump_pressed = false;
-            println!("reset");
-        }
+        // if is_key_down(KeyCode::Up) {
+        //     if !jump_pressed {
+        //         jump_pressed = true;
+        //         player1.set_jump_state(1, &mut rigid_body_set);
+        //     }
+        // }
+        // if is_key_released(KeyCode::Up) {
+        //     jump_pressed = false;
+        //     println!("reset");
+        // }
 
         if is_key_down(KeyCode::Q) {
-            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(-1.0, true);
+            carzz.spin(-100.0, &mut rigid_body_set);
         }
         if is_key_down(KeyCode::E) {
-            let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-            rigid_body.apply_torque_impulse(1.0, true);
+            carzz.spin(100.0, &mut rigid_body_set);
+        }
+
+        if is_key_down(KeyCode::Right) {
+            carzz.drive(5000.0, &mut rigid_body_set)
+        }
+        if is_key_down(KeyCode::Left) {
+            carzz.drive(-5000.0, &mut rigid_body_set)
+        }
+        if is_key_released(KeyCode::Right) || is_key_released(KeyCode::Left) {
+            carzz.drive(0.0, &mut rigid_body_set)
+        }
+        if is_key_down(KeyCode::Up) {
+            carzz.jump(&mut rigid_body_set);
         }
 
         // UPDATE PHYSICS:

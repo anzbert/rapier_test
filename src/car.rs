@@ -1,15 +1,13 @@
-// use macroquad::miniquad::date::now;
-
 use crate::nalgebra::Vector2;
 use crate::*;
 
-const HEIGHT: f32 = 1.5;
-const LENGTH: f32 = 6.0;
-const WHEEL_RADIUS: f32 = 1.0;
-const WHEEL_FRONT_X_OFFSET: f32 = 1.5;
-const WHEEL_FRONT_Y_OFFSET: f32 = 0.2;
-const WHEEL_BACK_X_OFFSET: f32 = -1.5;
-const WHEEL_BACK_Y_OFFSET: f32 = 0.2;
+const HEIGHT: f32 = 1.6;
+const LENGTH: f32 = 10.0;
+const WHEEL_RADIUS: f32 = 0.95;
+const WHEEL_FRONT_X_OFFSET: f32 = 3.2;
+const WHEEL_FRONT_Y_OFFSET: f32 = 0.0;
+const WHEEL_BACK_X_OFFSET: f32 = -3.2;
+const WHEEL_BACK_Y_OFFSET: f32 = 0.0;
 
 #[derive(Debug)]
 enum CarPart {
@@ -24,17 +22,10 @@ enum CarPart {
         joint_handle: Option<JointHandle>,
     },
 }
-
 enum SelectPart {
     Body,
     Wheel,
 }
-
-// struct Part {
-//     joint_handle: JointHandle,
-//     body_handle: RigidBodyHandle,
-//     coll_handle: ColliderHandle,
-// }
 
 impl CarPart {
     fn new(
@@ -46,6 +37,9 @@ impl CarPart {
     ) -> CarPart {
         let body = RigidBodyBuilder::new_dynamic()
             .translation(position)
+            .additional_mass(50.0)
+            .linear_damping(0.5)
+            .angular_damping(5.0)
             .build();
         let body_handle = body_set.insert(body);
 
@@ -54,7 +48,9 @@ impl CarPart {
                 .collision_groups(InteractionGroups::new(0b0100, 0b1101))
                 .build(),
             SelectPart::Wheel => ColliderBuilder::ball(half_extents.x)
-                .collision_groups(InteractionGroups::new(0b0010, 0b1011))
+                .friction(8.0)
+                // .density(1.5)
+                .collision_groups(InteractionGroups::new(0b0010, 0b0011))
                 .build(),
         };
         let coll_handle = coll_set.insert_with_parent(collider, body_handle, body_set);
@@ -80,11 +76,23 @@ impl CarPart {
         }
     }
 }
+#[derive(PartialEq, Eq, Hash)]
+enum CarComponents {
+    WheelFront,
+    WheelBack,
+    CarBody,
+}
 
+enum CarStates {
+    Air,
+    Ground,
+}
 pub struct Car {
-    velocity: Vector2<f32>,
+    _velocity: Vector2<f32>,
     position: Vector2<f32>,
-    parts: Vec<CarPart>,
+    parts: HashMap<CarComponents, CarPart>,
+    _joint_handles: Vec<JointHandle>,
+    state: CarStates,
 }
 
 impl Car {
@@ -97,7 +105,7 @@ impl Car {
         let car_body = CarPart::new(
             SelectPart::Body,
             position,
-            vector![CAR_LENGTH / 2.0, CAR_HEIGHT / 2.0],
+            vector![LENGTH / 2.0, HEIGHT / 2.0],
             body_set,
             coll_set,
         );
@@ -121,55 +129,119 @@ impl Car {
         );
 
         // ASSEMBLE CAR:
-        let mut _wheel_front_joint = BallJoint::new(
+        let wheel_front_joint = BallJoint::new(
             point![0.0, 0.0],
             point![WHEEL_FRONT_X_OFFSET, WHEEL_FRONT_Y_OFFSET],
         );
 
-        // motor test:
-        _wheel_front_joint.configure_motor_velocity(1.0, 0.5);
-
-        joint_set.insert(
+        let wheel_front_joint_handle = joint_set.insert(
             wheel_front.get_body_handle(),
             car_body.get_body_handle(),
-            _wheel_front_joint,
+            wheel_front_joint,
         );
 
-        let _wheel_back_joint = BallJoint::new(
+        let wheel_back_joint = BallJoint::new(
             point![0.0, 0.0],
             point![WHEEL_BACK_X_OFFSET, WHEEL_BACK_Y_OFFSET],
         );
-        joint_set.insert(
+
+        let wheel_back_joint_handle = joint_set.insert(
             wheel_back.get_body_handle(),
             car_body.get_body_handle(),
-            _wheel_back_joint,
+            wheel_back_joint,
         );
+
+        let mut component_map = HashMap::with_capacity(3);
+
+        component_map.insert(CarComponents::CarBody, car_body);
+        component_map.insert(CarComponents::WheelFront, wheel_front);
+        component_map.insert(CarComponents::WheelBack, wheel_back);
 
         Car {
             position,
-            velocity: vector![0.0, 0.0],
-            parts: vec![car_body, wheel_front, wheel_back],
+            _velocity: vector![0.0, 0.0],
+            parts: component_map,
+            _joint_handles: vec![wheel_front_joint_handle, wheel_back_joint_handle],
+            state: CarStates::Ground,
         }
     }
 
-    pub fn draw(&self, body_set: &RigidBodySet) {
-        for part in self.parts.iter() {
-            let translation = body_set[part.get_body_handle()].translation();
-            let rotation = body_set[part.get_body_handle()].rotation().angle();
-            // let iso = body_set[self.body_handle].position();
-            // println!("player pos - x: {} y: {}", translation.x, translation.y);
+    pub fn get_state(&self) {}
 
-            match part {
-                CarPart::Body { .. } => {
-                    utils::draw_line_center(
-                        pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
-                        rotation,
-                        size_mtr_to_pxl(HEIGHT),
-                        size_mtr_to_pxl(LENGTH),
-                        RED,
-                    );
-                }
-                CarPart::Wheel { .. } => {
+    pub fn drive(&self, velocity: f32, body_set: &mut RigidBodySet) {
+        let front_wheel_body = body_set
+            .get_mut(
+                self.parts
+                    .get(&CarComponents::WheelFront)
+                    .unwrap()
+                    .get_body_handle(),
+            )
+            .unwrap();
+        front_wheel_body.apply_torque(velocity, true);
+
+        let rigid_body = body_set
+            .get_mut(
+                self.parts
+                    .get(&CarComponents::WheelBack)
+                    .unwrap()
+                    .get_body_handle(),
+            )
+            .unwrap();
+        rigid_body.apply_torque(velocity, true);
+    }
+
+    pub fn jump(&self, body_set: &mut RigidBodySet) {
+        let rigid_body = body_set
+            .get_mut(
+                self.parts
+                    .get(&CarComponents::CarBody)
+                    .unwrap()
+                    .get_body_handle(),
+            )
+            .unwrap();
+        rigid_body.apply_impulse(vector![0.0, -1000.0], true);
+    }
+
+    pub fn spin(&self, torque: f32, body_set: &mut RigidBodySet) {
+        let rigid_body = body_set
+            .get_mut(
+                self.parts
+                    .get(&CarComponents::CarBody)
+                    .unwrap()
+                    .get_body_handle(),
+            )
+            .unwrap();
+        rigid_body.apply_torque_impulse(torque, true);
+    }
+
+    pub fn draw(&self, body_set: &RigidBodySet) {
+        let translation = body_set[self
+            .parts
+            .get(&CarComponents::CarBody)
+            .unwrap()
+            .get_body_handle()]
+        .translation();
+        let rotation = body_set[self
+            .parts
+            .get(&CarComponents::CarBody)
+            .unwrap()
+            .get_body_handle()]
+        .rotation()
+        .angle();
+        utils::draw_line_center(
+            pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
+            rotation,
+            size_mtr_to_pxl(HEIGHT),
+            size_mtr_to_pxl(LENGTH),
+            RED,
+        );
+
+        for (component, part) in self.parts.iter() {
+            match component {
+                &CarComponents::WheelBack | &CarComponents::WheelFront => {
+                    let translation = body_set[part.get_body_handle()].translation();
+                    let rotation = body_set[part.get_body_handle()].rotation().angle();
+
                     draw_poly(
                         pos_x_mtr_to_pxl(translation.x),
                         pos_y_mtr_to_pxl(translation.y),
@@ -178,14 +250,15 @@ impl Car {
                         rotation.to_degrees(),
                         ORANGE,
                     );
+                    draw_circle(
+                        pos_x_mtr_to_pxl(translation.x),
+                        pos_y_mtr_to_pxl(translation.y),
+                        size_mtr_to_pxl(0.2),
+                        BLUE,
+                    );
                 }
+                _ => {}
             }
-            draw_circle(
-                pos_x_mtr_to_pxl(translation.x),
-                pos_y_mtr_to_pxl(translation.y),
-                size_mtr_to_pxl(0.2),
-                BLUE,
-            );
         }
     }
 }
