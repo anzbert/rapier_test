@@ -1,6 +1,15 @@
-use crate::nalgebra::Vector2;
+use crate::nalgebra::*;
 
 use crate::*;
+
+// pub fn map_range_f32(source: f32, from_range: (f32, f32), to_range: (f32, f32)) -> f32 {
+//     to_range.0 + (source - from_range.0) * (to_range.1 - to_range.0) / (from_range.1 - from_range.0)
+// }
+
+pub fn turn_around(input: &Unit<Complex<f32>>) -> Unit<Complex<f32>> {
+    let output = input.angle() + PI;
+    UnitComplex::new(output)
+}
 
 pub fn size_mtr_to_pxl(metres: f32) -> f32 {
     metres * PIXELS_PER_METRE

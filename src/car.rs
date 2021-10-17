@@ -3,10 +3,10 @@ use crate::*;
 
 const HEIGHT: f32 = 1.6;
 const LENGTH: f32 = 10.0;
-const WHEEL_RADIUS: f32 = 0.95;
-const WHEEL_FRONT_X_OFFSET: f32 = 3.2;
+const WHEEL_RADIUS: f32 = 1.8;
+const WHEEL_FRONT_X_OFFSET: f32 = 3.4;
 const WHEEL_FRONT_Y_OFFSET: f32 = 0.0;
-const WHEEL_BACK_X_OFFSET: f32 = -3.2;
+const WHEEL_BACK_X_OFFSET: f32 = -3.4;
 const WHEEL_BACK_Y_OFFSET: f32 = 0.0;
 
 #[derive(Debug)]
@@ -75,6 +75,12 @@ impl CarPart {
             CarPart::Wheel { body_handle, .. } => *body_handle,
         }
     }
+    fn get_coll_handle(&self) -> ColliderHandle {
+        match self {
+            CarPart::Body { coll_handle, .. } => *coll_handle,
+            CarPart::Wheel { coll_handle, .. } => *coll_handle,
+        }
+    }
 }
 #[derive(PartialEq, Eq, Hash)]
 enum CarComponents {
@@ -82,8 +88,8 @@ enum CarComponents {
     WheelBack,
     CarBody,
 }
-
-enum CarStates {
+#[derive(PartialEq)]
+pub enum CarStates {
     Air,
     Ground,
 }
@@ -166,10 +172,55 @@ impl Car {
         }
     }
 
-    pub fn get_state(&self) {}
+    pub fn get_car_state(&self) -> CarStates {
+        match self.state {
+            CarStates::Air => CarStates::Air,
+            CarStates::Ground => CarStates::Ground,
+        }
+    }
 
-    pub fn drive(&self, velocity: f32, body_set: &mut RigidBodySet) {
-        let front_wheel_body = body_set
+    pub fn query_wheels_collision(
+        &self,
+        other_coll_handle: ColliderHandle,
+        narrow_phase: &NarrowPhase,
+    ) -> bool {
+        let wheel_front_coll = self
+            .parts
+            .get(&CarComponents::WheelFront)
+            .unwrap()
+            .get_coll_handle();
+        let wheel_back_coll = self
+            .parts
+            .get(&CarComponents::WheelBack)
+            .unwrap()
+            .get_coll_handle();
+
+        match narrow_phase.contact_pair(wheel_front_coll, other_coll_handle) {
+            Some(pair) => {
+                if !pair.has_any_active_contact {
+                    return false;
+                }
+            }
+            None => return false,
+        };
+        match narrow_phase.contact_pair(wheel_back_coll, other_coll_handle) {
+            Some(pair) => {
+                if !pair.has_any_active_contact {
+                    return false;
+                }
+            }
+            None => return false,
+        };
+
+        true
+    }
+
+    pub fn set_car_state(&mut self, new_state: CarStates) {
+        self.state = new_state;
+    }
+
+    pub fn drive(&self, torque: f32, body_set: &mut RigidBodySet) {
+        let wheel_front_body = body_set
             .get_mut(
                 self.parts
                     .get(&CarComponents::WheelFront)
@@ -177,9 +228,9 @@ impl Car {
                     .get_body_handle(),
             )
             .unwrap();
-        front_wheel_body.apply_torque(velocity, true);
+        wheel_front_body.apply_torque(torque, true);
 
-        let rigid_body = body_set
+        let wheel_back_body = body_set
             .get_mut(
                 self.parts
                     .get(&CarComponents::WheelBack)
@@ -187,10 +238,27 @@ impl Car {
                     .get_body_handle(),
             )
             .unwrap();
-        rigid_body.apply_torque(velocity, true);
+        wheel_back_body.apply_torque(torque, true);
     }
 
     pub fn jump(&self, body_set: &mut RigidBodySet) {
+        match self.state {
+            CarStates::Ground => {
+                let rigid_body = body_set
+                    .get_mut(
+                        self.parts
+                            .get(&CarComponents::CarBody)
+                            .unwrap()
+                            .get_body_handle(),
+                    )
+                    .unwrap();
+                rigid_body.apply_impulse(vector![0.0, -6000.0], true);
+            }
+            CarStates::Air => {}
+        }
+    }
+
+    pub fn boost(&self, force: f32, body_set: &mut RigidBodySet) {
         let rigid_body = body_set
             .get_mut(
                 self.parts
@@ -199,7 +267,18 @@ impl Car {
                     .get_body_handle(),
             )
             .unwrap();
-        rigid_body.apply_impulse(vector![0.0, -1000.0], true);
+
+        let rotation = rigid_body.rotation();
+
+        let final_rot = if rotation.angle() < -0.5 * PI || rotation.angle() > 0.5 * PI {
+            utils::turn_around(rotation)
+        } else {
+            *rotation
+        };
+
+        let boost_vector = final_rot.transform_vector(&vector!(0.0, 1.0));
+
+        rigid_body.apply_impulse(boost_vector * force, true);
     }
 
     pub fn spin(&self, torque: f32, body_set: &mut RigidBodySet) {

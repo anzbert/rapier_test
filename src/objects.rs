@@ -1,145 +1,10 @@
-use macroquad::miniquad::date::now;
-
 use crate::nalgebra::Vector2;
 use crate::*;
-
-// use std::time::{Duration, Instant};
 
 fn corner_to_center(corner: Vector2<f32>, size: Vector2<f32>) -> Vector2<f32> {
     let x = corner.x + (size.x / 2.0);
     let y = corner.y + (size.y / 2.0);
     vector![x, y]
-}
-
-#[derive(Debug)]
-pub struct Player {
-    pub pos: Vector2<f32>,
-    pub size: Vector2<f32>,
-    pub rot: f32,
-    pub body_handle: RigidBodyHandle,
-    pub collider_handle: ColliderHandle,
-
-    pub jump_state: usize,
-    pub jump_time: f64,
-}
-
-impl Player {
-    pub fn new(
-        pos: Vector2<f32>,
-        size: Vector2<f32>,
-        body_set: &mut RigidBodySet,
-        coll_set: &mut ColliderSet,
-        _joint_set: &mut JointSet,
-    ) -> Player {
-        let size = size;
-
-        // body
-        let body = RigidBodyBuilder::new_dynamic()
-            .translation(corner_to_center(pos, size))
-            // .rotation(0.0)
-            .build();
-        let player_handle = body_set.insert(body);
-
-        let half_size = size / 2.0;
-        let collider = ColliderBuilder::cuboid(half_size.x, half_size.y)
-            .restitution(PLAYER_RESTITUTION)
-            .build();
-
-        let player_collider_handle = coll_set.insert_with_parent(collider, player_handle, body_set);
-
-        // // wheel
-        // let wheel1 = RigidBodyBuilder::new_dynamic()
-        //     .translation(corner_to_center(vector![pos.x - 0.0, pos.y + 0.0], size))
-        //     // .rotation(0.0)
-        //     .build();
-        // let wheel1_handle = body_set.insert(wheel1);
-
-        // let wheel1_radius = 1.0;
-        // let wheel1_collider = ColliderBuilder::ball(wheel1_radius)
-        //     .restitution(0.7)
-        //     .build();
-
-        // let _wheel1_collider_handle =
-        //     coll_set.insert_with_parent(wheel1_collider, wheel1_handle, body_set);
-
-        // // joint
-        // let wheel1_joint = BallJoint::new(point![0.0, 0.0], point![0.0, 0.0]);
-        // joint_set.insert(player_handle, wheel1_handle, wheel1_joint);
-
-        Player {
-            pos,
-            rot: 0.0,
-            size,
-            body_handle: player_handle,
-            collider_handle: player_collider_handle,
-
-            jump_state: 0,
-            jump_time: now(),
-        }
-    }
-
-    pub fn set_jump_state(&mut self, state: usize, body_set: &mut RigidBodySet) {
-        // if now() - self.jump_time > 0.2 {
-        match state {
-            0 => {
-                self.jump_time = now();
-                self.jump_state = 0;
-            }
-            1 | 2 => {
-                if self.jump_state < 2 {
-                    let rigid_body = body_set.get_mut(self.body_handle).unwrap();
-                    rigid_body.apply_impulse(vector![0.0, -150.0], true);
-                    self.jump_state += 1;
-                    self.jump_time = now();
-                }
-            }
-            _ => {}
-        };
-        // println!("state {}", self.jump_state);
-        // }
-    }
-
-    pub fn draw(&self, body_set: &RigidBodySet) {
-        let translation = body_set[self.body_handle].translation();
-        let rotation = body_set[self.body_handle].rotation().angle();
-        // let iso = body_set[self.body_handle].position();
-
-        // println!("player pos - x: {} y: {}", translation.x, translation.y);
-
-        utils::draw_line_center(
-            pos_vec_mtr_to_pxl(vector![translation.x, translation.y]),
-            rotation + (PI / 2.0),
-            size_mtr_to_pxl(self.size.x),
-            size_mtr_to_pxl(self.size.y),
-            PURPLE,
-        );
-
-        draw_circle(
-            pos_x_mtr_to_pxl(translation.x),
-            pos_y_mtr_to_pxl(translation.y),
-            size_mtr_to_pxl(0.3),
-            BLUE,
-        );
-
-        // // wheel
-        // let w1_translation = body_set[self.wheel1_handle].translation();
-        // let w1_rotation = body_set[self.wheel1_handle].rotation().angle().to_degrees();
-        // draw_poly(
-        //     pos_x_mtr_to_pxl(w1_translation.x),
-        //     pos_y_mtr_to_pxl(w1_translation.y),
-        //     8,
-        //     size_mtr_to_pxl(self.wheel1_radius),
-        //     w1_rotation,
-        //     YELLOW,
-        // );
-
-        // draw_circle(
-        //     pos_x_mtr_to_pxl(translation.x),
-        //     pos_y_mtr_to_pxl(translation.y),
-        //     size_mtr_to_pxl(0.3),
-        //     BLUE,
-        // );
-    }
 }
 
 #[derive(Debug)]
@@ -225,9 +90,7 @@ impl Solid {
             .build();
         let solid_handle = body_set.insert(body);
 
-        let collider = ColliderBuilder::cuboid(size.x / 2.0, size.y / 2.0)
-            // .collision_groups(InteractionGroups::new(0b1010, 0b1011))
-            .build();
+        let collider = ColliderBuilder::cuboid(size.x / 2.0, size.y / 2.0).build();
         let solid_collider_handle = coll_set.insert_with_parent(collider, solid_handle, body_set);
 
         Solid {
@@ -265,9 +128,6 @@ impl Solid {
         }
     }
     pub fn draw(&self, body_set: &RigidBodySet, _coll_set: &ColliderSet) {
-        // let cuboid = _coll_set[self.collider_handle].shape().as_cuboid(); // and then access its dimensions with
-        // println!("{} : {:?}", self.name, cuboid.unwrap().half_extents);
-
         let translation = body_set[self.body_handle].translation();
         let corner_x = translation.x - self.size.x / 2.0;
         let corner_y = translation.y - self.size.y / 2.0;

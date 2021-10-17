@@ -10,7 +10,7 @@ mod objects;
 use objects::*;
 
 mod car;
-// use car::*;
+use car::CarStates;
 
 mod utils;
 use crate::utils::*;
@@ -52,18 +52,8 @@ async fn main() {
     let mut joint_set = JointSet::new();
 
     // ADD OBJECTS:
-    let mut players: Vec<&Player> = Vec::new();
     let mut balls: Vec<&FootBall> = Vec::new();
     let mut solids: Vec<&Solid> = Vec::new();
-
-    let mut player1 = Player::new(
-        vector![10.0, ARENA_HEIGHT - 20.0],
-        vector![CAR_LENGTH, CAR_HEIGHT],
-        &mut rigid_body_set,
-        &mut collider_set,
-        &mut joint_set,
-    );
-    players.push(&player1);
 
     let ball = FootBall::new(
         vector![ARENA_WIDTH / 2.0, ARENA_HEIGHT - 10.0],
@@ -115,7 +105,7 @@ async fn main() {
     // key variable:
     // let mut jump_pressed = false;
 
-    let carzz = car::Car::new(
+    let mut carzz = car::Car::new(
         vector![ARENA_WIDTH / 4.0, ARENA_HEIGHT - 4.0],
         &mut rigid_body_set,
         &mut collider_set,
@@ -134,63 +124,37 @@ async fn main() {
             }
         }
 
-        // UPDATE CONTROLS:
-        // if is_key_down(KeyCode::Right) {
-        //     match player1.jump_state {
-        //         1 | 2 => {
-        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-        //             rigid_body.apply_torque_impulse(1.0, true);
-        //         }
-        //         0 | _ => {
-        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-        //             rigid_body.apply_impulse(vector![10.0, 0.0], true);
-        //         }
-        //     }
+        // if is_key_down(KeyCode::Q) {
+        //     carzz.spin(-100.0, &mut rigid_body_set);
+        // }
+        // if is_key_down(KeyCode::E) {
+        //     carzz.spin(100.0, &mut rigid_body_set);
         // }
 
-        // if is_key_down(KeyCode::Left) {
-        //     match player1.jump_state {
-        //         1 | 2 => {
-        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-        //             rigid_body.apply_torque_impulse(-1.0, true);
-        //         }
-        //         0 | _ => {
-        //             let rigid_body = rigid_body_set.get_mut(player1.body_handle).unwrap();
-        //             rigid_body.apply_impulse(vector![-10.0, 0.0], true);
-        //         }
-        //     }
-        // }
-
-        // if is_key_down(KeyCode::Up) {
-        //     if !jump_pressed {
-        //         jump_pressed = true;
-        //         player1.set_jump_state(1, &mut rigid_body_set);
-        //     }
-        // }
-        // if is_key_released(KeyCode::Up) {
-        //     jump_pressed = false;
-        //     println!("reset");
-        // }
-
-        if is_key_down(KeyCode::Q) {
-            carzz.spin(-100.0, &mut rigid_body_set);
-        }
-        if is_key_down(KeyCode::E) {
-            carzz.spin(100.0, &mut rigid_body_set);
-        }
-
-        if is_key_down(KeyCode::Right) {
+        if is_key_down(KeyCode::Right) && carzz.get_car_state() == CarStates::Ground {
             carzz.drive(5000.0, &mut rigid_body_set)
         }
-        if is_key_down(KeyCode::Left) {
+        if is_key_down(KeyCode::Left) && carzz.get_car_state() == CarStates::Ground {
             carzz.drive(-5000.0, &mut rigid_body_set)
         }
-        if is_key_released(KeyCode::Right) || is_key_released(KeyCode::Left) {
-            carzz.drive(0.0, &mut rigid_body_set)
+
+        if is_key_down(KeyCode::Right) && carzz.get_car_state() == CarStates::Air {
+            carzz.spin(100.0, &mut rigid_body_set);
         }
+        if is_key_down(KeyCode::Left) && carzz.get_car_state() == CarStates::Air {
+            carzz.spin(-100.0, &mut rigid_body_set);
+        }
+
         if is_key_down(KeyCode::Up) {
             carzz.jump(&mut rigid_body_set);
         }
+
+        if is_key_down(KeyCode::Space) {
+            carzz.boost(-300.0, &mut rigid_body_set);
+        }
+        // if is_key_down(KeyCode::Space) && is_key_down(KeyCode::Right) {
+        //     carzz.boost(300.0, Side::Right, &mut rigid_body_set);
+        // }
 
         // UPDATE PHYSICS:
         let integration_parameters = IntegrationParameters {
@@ -214,9 +178,6 @@ async fn main() {
         );
 
         // UPDATE GRAPHIC ELEMENTS:
-        // for p in players.iter() {
-        player1.draw(&rigid_body_set);
-        // }
         for b in balls.iter() {
             b.draw(&rigid_body_set);
         }
@@ -224,14 +185,11 @@ async fn main() {
             s.draw(&rigid_body_set, &collider_set);
         }
 
-        if let Some(contact_pair) =
-            narrow_phase.contact_pair(floor.collider_handle, player1.collider_handle)
-        {
-            // The contact pair exists meaning that the broad-phase identified a potential contact.
-            if contact_pair.has_any_active_contact {
-                player1.set_jump_state(0, &mut rigid_body_set);
-                // println!("contact");
-            }
+        // carzzz
+        if carzz.query_wheels_collision(floor.collider_handle, &narrow_phase) {
+            carzz.set_car_state(CarStates::Ground);
+        } else {
+            carzz.set_car_state(CarStates::Air);
         }
 
         carzz.draw(&rigid_body_set);
